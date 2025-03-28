@@ -1,3 +1,4 @@
+from picamera2 import Picamera2
 import torch
 import cv2
 import numpy as np
@@ -10,18 +11,18 @@ cv2.setUseOptimized(True)
 # Load the YOLOv8 model
 model = YOLO('fine-tuned/yolov8n-oiv7.pt')
 
-# Set webcam resolution (modify based on Raspberry Pi camera specs)
+# Set camera resolution
 ORIG_WIDTH, ORIG_HEIGHT = 640, 480
 INPUT_SIZE = 320  # YOLOv8 expects square inputs
 
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, ORIG_WIDTH)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, ORIG_HEIGHT)
-cap.set(cv2.CAP_PROP_FPS, 10)  # Reduce FPS for better performance
+# Initialize Picamera2
+picam2 = Picamera2()
+config = picam2.create_preview_configuration(main={"size": (ORIG_WIDTH, ORIG_HEIGHT), "format": "RGB888"})
+picam2.configure(config)
+picam2.start()
 
 def process_frame(frame):
     """Processes the frame and draws bounding boxes with correct scaling."""
-    # Get original frame dimensions
     h, w, _ = frame.shape
     
     # Resize frame to YOLO input size
@@ -66,10 +67,9 @@ def process_frame(frame):
 frame_skip = 1  # Skip alternate frames to improve FPS
 frame_count = 0
 
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
+while True:
+    frame = picam2.capture_array()
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Convert from RGB to BGR for OpenCV
 
     # Process every frame (or every alternate frame if needed)
     if frame_count % frame_skip == 0:
@@ -81,5 +81,5 @@ while cap.isOpened():
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-cap.release()
 cv2.destroyAllWindows()
+picam2.close()
