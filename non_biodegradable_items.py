@@ -1,0 +1,21 @@
+non_biodegradable_items = [
+    'Plastic bag', 'Tin can', 'Barrel', 'Bottle', 'Picnic basket', 'Jug', 'Waste container', 'Beaker', 
+    'Measuring cup', 'Chopsticks', 'Ladle', 'Spatula', 'Can opener', 'Cutting board', 'Whisk', 'Drinking straw', 
+    'Bottle opener', 'Pizza cutter', 'Spoon', 'Fork', 'Scissors', 'Poster', 'Calculator', 'Box', 'Stapler', 
+    'Whiteboard', 'Pencil sharpener', 'Eraser', 'Fax', 'Adhesive tape', 'Ring binder', 'Pencil case', 
+    'Paper cutter', 'Toilet paper', 'Envelope', 'Pen', 'Paper towel', 'Glasses', 'Plastic', 'Glass', 
+    'Cardboard', 'Paper', 'Metal', 'Clothing', 'Doll', 'Balloon', 'Dice', 'Flying disc', 'Kite', 'Teddy bear', 
+    'Pillow', 'Kitchenware', 'Tableware', 'Teapot', 'Mug', 'Coffee cup', 'Salt and pepper shakers', 
+    'Mixing bowl', 'Saucer', 'Cocktail shaker', 'Bowl', 'Plate', 'Pitcher', 'Platter', 'Wine glass', 
+    'Serving tray', 'Cake stand', 'Frying pan', 'Wok', 'Spice rack', 'Picture frame', 'Candle', 'Lamp', 
+    'Bathroom accessory', 'Towel', 'Soap dispenser', 'Facial tissue holder', 'Stretcher', 'Stethoscope', 
+    'Band-aid', 'Paddle', 'Ball', 'Football', 'Cricket ball', 'Volleyball', 'Tennis ball', 'Rugby ball', 
+    'Flowerpot', 'Screwdriver', 'Drill', 'Chainsaw', 'Wrench', 'Flashlight', 'Ratchet', 'Hammer', 'Scale', 
+    'Snowplow', 'Nail', 'Tripod', 'Torch', 'Chisel', 'Axe', 'Camera', 'Grinder', 'Ruler', 'Binoculars', 
+    'Cowboy hat', 'Fedora', 'Sombrero', 'Sun hat', 'Scarf', 'Skirt', 'Miniskirt', 'Jacket', 'Fashion accessory', 
+    'Glove', 'Baseball glove', 'Belt', 'Sunglasses', 'Tiara', 'Necklace', 'Sock', 'Earrings', 'Tie', 'Goggles', 
+    'Hat', 'Handbag', 'Watch', 'Umbrella', 'Crown', 'Swim cap', 'Trousers', 'Jeans', 'Footwear', 'Roller skates', 
+    'Boot', 'High heels', 'Sandal', 'Sports uniform', 'Luggage & bags', 'Backpack', 'Suitcase', 'Briefcase', 
+    'Face powder', 'Hair spray', 'Lipstick', 'Perfume', 'Personal care', 'Toothbrush', 'Crutch', 'Cream', 
+    'Diaper'
+]
