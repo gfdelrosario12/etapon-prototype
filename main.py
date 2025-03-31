@@ -1,78 +1,72 @@
 import torch
 import cv2
 import numpy as np
-from picamera2 import Picamera2
 from ultralytics import YOLO
+from picamera2 import Picamera2
 from biodegradable_items import biodegradable_items
 from non_biodegradable_items import non_biodegradable_items
 
-cv2.setUseOptimized(True)
+# Load the YOLOv8 model
+model = YOLO('yolov8x-oiv7.pt')
 
-# Load YOLOv8 model (ONNX format)
-model = YOLO('fine-tuned/yolov8n-oiv7.onnx')
-
-# Initialize PiCamera2
+# Initialize Picamera2
 picam2 = Picamera2()
-config = picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
+config = picam2.create_preview_configuration(main={"size": (640, 480)})
 picam2.configure(config)
 picam2.start()
 
-INPUT_SIZE = 320  # YOLOv8 input size
-
 def process_frame(frame):
-    """Processes the frame and draws bounding boxes with correct scaling."""
-    h, w, _ = frame.shape
+    # Convert frame to a NumPy array (no resizing needed)
+    img_array = np.array(frame)
 
-    # Resize and normalize input
-    img_resized = cv2.resize(frame, (INPUT_SIZE, INPUT_SIZE))
-
+    # Get predictions from the model
     with torch.no_grad():
-        results = model(img_resized)
+        results = model(img_array)
 
+    # Extract predictions
     predictions = results[0].boxes
     class_names = model.names
 
-    scale_x, scale_y = w / INPUT_SIZE, h / INPUT_SIZE
-
-    for pred in predictions:
-        x1, y1, x2, y2 = pred.xyxy[0].tolist()
-        confidence = pred.conf[0].item()
-        class_id = int(pred.cls[0].item())
+    # Iterate through detected objects
+    for box, conf, cls in zip(predictions.xyxy, predictions.conf, predictions.cls):
+        x1, y1, x2, y2 = map(int, box.tolist())  # Convert to integers
+        confidence = conf.item()
+        class_id = int(cls.item())
         label = class_names[class_id]
 
-        # Scale coordinates back to original size
-        x1, x2 = int(x1 * scale_x), int(x2 * scale_x)
-        y1, y2 = int(y1 * scale_y), int(y2 * scale_y)
-
-        # Determine category and color
+        # Determine the object type
         if label in biodegradable_items:
-            color, category = (0, 255, 0), "Biodegradable"
+            object_type = "Biodegradable"
+            color = (0, 255, 0)  # Green
         elif label in non_biodegradable_items:
-            color, category = (0, 0, 255), "Non-Biodegradable"
+            object_type = "Non-Biodegradable"
+            color = (0, 0, 255)  # Red
         else:
-            color, category = (255, 0, 0), "Unknown"
+            object_type = "Unknown"
+            color = (255, 0, 0)  # Blue
 
         # Draw bounding box and label
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(frame, f'{label}: {category} ({confidence:.2f})',
-                    (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        cv2.putText(frame, f'{label}: {object_type} - {confidence:.2f}', 
+                    (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
 
     return frame
 
-frame_skip, frame_count = 2, 0  # Skip every 2nd frame for better FPS
-
+# Real-time processing loop
 while True:
+    # Capture frame from Picamera2
     frame = picam2.capture_array()
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR (OpenCV format)
 
-    if frame_count % frame_skip == 0:
-        processed_frame = process_frame(frame)
-        cv2.imshow('Object Detection', processed_frame)
+    # Process the frame (object detection + drawing)
+    processed_frame = process_frame(frame)
 
-    frame_count += 1
+    # Display the result
+    cv2.imshow('Real-time Image Processing', processed_frame)
 
+    # Break loop on 'q' key press
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Cleanup
 cv2.destroyAllWindows()
 picam2.stop()
