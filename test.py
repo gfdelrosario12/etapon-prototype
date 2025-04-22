@@ -2,18 +2,19 @@ import torch
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from picamera2 import Picamera2
 from biodegradable_items import biodegradable_items
 from non_biodegradable_items import non_biodegradable_items
 
 # Load the YOLOv8 model
-model = YOLO('yolov8n-oiv7.pt')
+model = YOLO('/models/best.pt')
 
-# Initialize Picamera2
-picam2 = Picamera2()
-config = picam2.create_preview_configuration(main={"size": (640, 480)})
-picam2.configure(config)
-picam2.start()
+# Initialize OpenCV video capture (use 0 for the default camera or specify camera index)
+cap = cv2.VideoCapture(0)  # 0 typically refers to the default webcam
+
+# Check if the camera opened successfully
+if not cap.isOpened():
+    print("Error: Could not open webcam.")
+    exit()
 
 def process_frame(frame):
     # Convert frame to a NumPy array (no resizing needed)
@@ -48,14 +49,19 @@ def process_frame(frame):
         # Draw bounding box and label
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
         cv2.putText(frame, f'{label}: {object_type} - {confidence:.2f}', 
-                    (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+                    (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
     return frame
 
 # Real-time processing loop
 while True:
-    # Capture frame from Picamera2
-    frame = picam2.capture_array()
+    # Capture frame from webcam
+    ret, frame = cap.read()
+
+    # Check if the frame was captured successfully
+    if not ret:
+        print("Error: Failed to capture image.")
+        break
 
     # Process the frame (object detection + drawing)
     processed_frame = process_frame(frame)
@@ -68,5 +74,5 @@ while True:
         break
 
 # Cleanup
+cap.release()
 cv2.destroyAllWindows()
-picam2.stop()
