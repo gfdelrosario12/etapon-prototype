@@ -1,20 +1,19 @@
 import RPi.GPIO as GPIO
 import time
 
-# Define GPIO pins
-BIO_SERVO_PIN = 17
-NONBIO_SERVO_PIN = 27
-
-# Setup
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(BIO_SERVO_PIN, GPIO.OUT)
-GPIO.setup(NONBIO_SERVO_PIN, GPIO.OUT)
+GPIO.setup(18, GPIO.OUT)
 
-# Initialize PWM at 50Hz
-bio_pwm = GPIO.PWM(BIO_SERVO_PIN, 50)
-nonbio_pwm = GPIO.PWM(NONBIO_SERVO_PIN, 50)
-bio_pwm.start(0)
-nonbio_pwm.start(0)
+pwm = GPIO.PWM(18, 1000)  # Pin 18, 1kHz frequency
+pwm.start(50)            # Start PWM with 50% duty cycle
+
+time.sleep(2)
+
+pwm.ChangeDutyCycle(75)  # Change duty cycle to 75%
+time.sleep(2)
+
+pwm.stop()
+GPIO.cleanup()
 
 def angle_to_duty_cycle(angle):
     return 2.5 + (angle / 180.0) * 10  # maps angle (0–180) to 2.5–12.5 duty
