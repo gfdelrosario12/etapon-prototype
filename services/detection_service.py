@@ -25,9 +25,11 @@ def process_frame(frame):
         if label in biodegradable_items:
             object_type = "Biodegradable"
             sendSignalToArduino(1)
+            time.sleep(10000)
         elif label in non_biodegradable_items:
             object_type = "Non-Biodegradable"
             sendSignalToArduino(2)
+            time.sleep(10000)
         else:
             object_type = "Unknown"
 
