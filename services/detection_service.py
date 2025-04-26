@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import time
 from ultralytics import YOLO
 from categories.biodegradable_items import biodegradable_items
 from categories.non_biodegradable_items import non_biodegradable_items
