@@ -24,20 +24,28 @@ def process_frame(frame):
             class_id = int(cls.item())
             label = class_names[class_id]
 
-            if label in biodegradable_items:
-                object_type = "Biodegradable"
-                sendSignalToArduino(1)
-            elif label in non_biodegradable_items:
-                object_type = "Non-Biodegradable"
-                sendSignalToArduino(2)
-            else:
-                object_type = "Unknown"
+            # Only process detections with confidence above 70%
+            if confidence >= 0.7:
+                if label in biodegradable_items:
+                    object_type = "Biodegradable"
+                    sendSignalToArduino(1)
+                elif label in non_biodegradable_items:
+                    object_type = "Non-Biodegradable"
+                    sendSignalToArduino(2)
+                else:
+                    object_type = "Unknown"
 
-            draw_detection(frame, x1, y1, x2, y2, label, object_type, confidence)
-            time.sleep(10)
+                # Draw the detection
+                draw_detection(frame, x1, y1, x2, y2, label, object_type, confidence)
+                time.sleep(10)
+            else:
+                # Skip processing if confidence is below 70%
+                continue
+                
         return frame
     except Exception as e:
         print(f"Error processing frame: {e}")
         print("Check process_frame() function in detection_service.py")
         return None
+
     
