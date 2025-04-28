@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import time
 from ultralytics import YOLO
 from categories.biodegradable_items import biodegradable_items
 from categories.non_biodegradable_items import non_biodegradable_items
@@ -9,28 +10,34 @@ from utils.serial_communication_to_arduino import sendSignalToArduino
 model = YOLO('models/best.pt')
 
 def process_frame(frame):
-    img_array = np.array(frame)
-    with torch.no_grad():
-        results = model(img_array)
+    try:
+        img_array = np.array(frame)
+        with torch.no_grad():
+            results = model(img_array)
 
-    predictions = results[0].boxes
-    class_names = model.names
+        predictions = results[0].boxes
+        class_names = model.names
 
-    for box, conf, cls in zip(predictions.xyxy, predictions.conf, predictions.cls):
-        x1, y1, x2, y2 = map(int, box.tolist())
-        confidence = conf.item()
-        class_id = int(cls.item())
-        label = class_names[class_id]
+        for box, conf, cls in zip(predictions.xyxy, predictions.conf, predictions.cls):
+            x1, y1, x2, y2 = map(int, box.tolist())
+            confidence = conf.item()
+            class_id = int(cls.item())
+            label = class_names[class_id]
 
-        if label in biodegradable_items:
-            object_type = "Biodegradable"
-            sendSignalToArduino(1)
-        elif label in non_biodegradable_items:
-            object_type = "Non-Biodegradable"
-            sendSignalToArduino(2)
-        else:
-            object_type = "Unknown"
+            if label in biodegradable_items:
+                object_type = "Biodegradable"
+                sendSignalToArduino(1)
+            elif label in non_biodegradable_items:
+                object_type = "Non-Biodegradable"
+                sendSignalToArduino(2)
+            else:
+                object_type = "Unknown"
 
-        draw_detection(frame, x1, y1, x2, y2, label, object_type, confidence)
-
-    return frame
+            draw_detection(frame, x1, y1, x2, y2, label, object_type, confidence)
+            time.sleep(10)
+        return frame
+    except Exception as e:
+        print(f"Error processing frame: {e}")
+        print("Check process_frame() function in detection_service.py")
+        return None
+    
