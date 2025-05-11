@@ -1,9 +1,12 @@
+#!/usr/bin/env python3
+
 import tkinter as tk
 from tkinter import ttk
 from camera.webcam import get_camera, read_frame
 from services.detection_service import process_frame
 from picamera2 import Picamera2
 from PIL import Image, ImageTk
+import time
 
 
 class CameraApp:
@@ -12,8 +15,12 @@ class CameraApp:
         self.window.title(window_title)
         self.window.configure(bg="#1e1e1e")
 
-        self.is_detecting = False  # Toggle flag
+        self.is_detecting = False
         self.picam2 = get_camera()
+
+        # Detection timer settings
+        self.last_detection_time = 0
+        self.detection_delay = 7  # seconds
 
         # --- Main layout ---
         main_frame = tk.Frame(self.window, bg="#1e1e1e")
@@ -26,7 +33,7 @@ class CameraApp:
         right_frame.pack(side=tk.RIGHT, fill=tk.Y)
 
         # --- Canvas for video ---
-        self.canvas = tk.Canvas(left_frame, width=640, height=480, bg="black")
+        self.canvas = tk.Canvas(left_frame, width=640, height=450, bg="black")
         self.canvas.pack()
 
         # --- Start/Stop Button below video ---
@@ -47,6 +54,16 @@ class CameraApp:
             justify=tk.LEFT
         )
         self.counter_label.pack(anchor=tk.NW, pady=5)
+
+        # --- Countdown Timer ---
+        self.timer_label = tk.Label(
+            right_frame,
+            text="Next detection in: -",
+            font=("Helvetica", 12),
+            bg="#1e1e1e",
+            fg="lightgray"
+        )
+        self.timer_label.pack(anchor=tk.NW, pady=(0, 10))
 
         # --- Log box below counters ---
         self.log_text = tk.Text(
@@ -72,28 +89,43 @@ class CameraApp:
     def toggle_detection(self):
         self.is_detecting = not self.is_detecting
         self.toggle_button.config(text="Stop Detection" if self.is_detecting else "Start Detection")
+        if self.is_detecting:
+            self.last_detection_time = time.time()
 
     def update(self):
         try:
             frame = read_frame(self.picam2)
+            current_time = time.time()
 
             if self.is_detecting:
-                frame, self.biodegradable_counter, self.non_biodegradable_counter, logs = process_frame(
-                    frame,
-                    self.biodegradable_counter,
-                    self.non_biodegradable_counter
-                )
+                time_since_last = current_time - self.last_detection_time
+                remaining_delay = max(0, int(self.detection_delay - time_since_last))
+                self.timer_label.config(text=f"Next detection in: {remaining_delay}s")
 
-                self.counter_label.config(
-                    text=f"Biodegradable: {self.biodegradable_counter}\nNon-Biodegradable: {self.non_biodegradable_counter}"
-                )
+                if time_since_last >= self.detection_delay:
+                    frame, self.biodegradable_counter, self.non_biodegradable_counter, logs = process_frame(
+                        frame,
+                        self.biodegradable_counter,
+                        self.non_biodegradable_counter
+                    )
 
-                if logs:
-                    for log in logs:
-                        self.log_text.insert(tk.END, log + "\n")
-                    self.log_text.see(tk.END)
+                    # Reset timer ONLY if a valid detection was made
+                    if any("Biodegradable detected" in log or "Non-Biodegradable detected" in log for log in logs):
+                        self.last_detection_time = current_time
 
-            frame_rgb = Picamera2.cvtColor(frame, Picamera2.COLOR_BGR2RGB)
+                    self.counter_label.config(
+                        text=f"Biodegradable: {self.biodegradable_counter}\nNon-Biodegradable: {self.non_biodegradable_counter}"
+                    )
+
+                    if logs:
+                        for log in logs:
+                            self.log_text.insert(tk.END, log + "\n")
+                        self.log_text.see(tk.END)
+            else:
+                self.timer_label.config(text="Detection paused.")
+
+            # Show the frame
+            frame_rgb = frame[..., ::-1]  # Convert BGR to RGB
             img = Image.fromarray(frame_rgb)
             img_tk = ImageTk.PhotoImage(image=img)
 
@@ -113,4 +145,5 @@ class CameraApp:
 # Run the app
 if __name__ == "__main__":
     root = tk.Tk()
-    app = CameraApp(root, "eTapon - Smart Trash Segragation Bin")
+    app = CameraApp(root, "eTapon - Smart Trash Segregation Bin")
+
