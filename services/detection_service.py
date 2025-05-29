@@ -7,9 +7,13 @@ from categories.non_biodegradable_items import non_biodegradable_items
 from utils.drawing_utils import draw_detection
 from utils.serial_communication_to_arduino import sendSignalToArduino
 
-model = YOLO('models/best.pt')
+model = YOLO('my_model.pt')
 
-def process_frame(frame):
+biodegradable_counter = 0
+non_biodegradable_counter = 0
+
+def process_frame(frame, biodegradable_counter=0, non_biodegradable_counter=0):
+    logs = []
     try:
         img_array = np.array(frame)
         with torch.no_grad():
@@ -24,28 +28,26 @@ def process_frame(frame):
             class_id = int(cls.item())
             label = class_names[class_id]
 
-            # Only process detections with confidence above 70%
-            if confidence >= 0.7:
-                if label in biodegradable_items:
-                    object_type = "Biodegradable"
-                    sendSignalToArduino(1)
-                elif label in non_biodegradable_items:
-                    object_type = "Non-Biodegradable"
-                    sendSignalToArduino(2)
-                else:
-                    object_type = "Unknown"
-
-                # Draw the detection
-                draw_detection(frame, x1, y1, x2, y2, label, object_type, confidence)
-                time.sleep(10)
+            # Process all detections regardless of confidence
+            if label in biodegradable_items:
+                object_type = "Biodegradable"
+                sendSignalToArduino(1)
+                biodegradable_counter += 1
+            elif label in non_biodegradable_items:
+                object_type = "Non-Biodegradable"
+                sendSignalToArduino(2)
+                non_biodegradable_counter += 1
             else:
-                # Skip processing if confidence is below 70%
-                continue
-                
-        return frame
+                object_type = "Unknown"
+
+            # Draw the detection
+            draw_detection(frame, x1, y1, x2, y2, label, object_type, confidence)
+            logs.append(f"{object_type} detected: {label} ({confidence:.2f})")
+
+        return frame, biodegradable_counter, non_biodegradable_counter, logs
     except Exception as e:
-        print(f"Error processing frame: {e}")
-        print("Check process_frame() function in detection_service.py")
-        return None
+        logs.append(f"Error processing frame: {e}")
+        return frame, biodegradable_counter, non_biodegradable_counter, logs
+
 
     

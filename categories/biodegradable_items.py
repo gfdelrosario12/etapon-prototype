@@ -1,1 +1,1 @@
-biodegradable_items = ["Apple", "Banana", "Egg", "Orange", "Leaves"]
+biodegradable_items = ["Fruit", "fruit", "Food", "food", "Egg", "egg"]

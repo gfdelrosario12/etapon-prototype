@@ -1,1 +1,1 @@
-non_biodegradable_items = ["Cardboard", "Drinking Straw", "Face Mask", "Fork and Spoon", "Glass", "Hairnet", "Metal", "Paper", "Phone Case", "Plastic", "Styrofoam", "Tissue Paper", "Toothbrush"]
+non_biodegradable_items = ["Glass", "glass", "Metal", "metal", "Plastic", "plastic", "Tissue", "tissue", "Paper", "paper"]

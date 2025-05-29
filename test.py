@@ -2,12 +2,11 @@ import torch
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from biodegradable_items import biodegradable_items
-from non_biodegradable_items import non_biodegradable_items
-from servo_controller import move_biodegradable_servo, move_nonbiodegradable_servo, cleanup
+from categories.biodegradable_items import biodegradable_items
+from categories.non_biodegradable_items import non_biodegradable_items
 
 # Load YOLOv8 model
-model = YOLO('/models/best.pt')
+model = YOLO('yolov8x-oiv7')
 
 # Start camera
 cap = cv2.VideoCapture(0)
@@ -32,11 +31,9 @@ def process_frame(frame):
         if label in biodegradable_items:
             object_type = "Biodegradable"
             color = (0, 255, 0)
-            move_biodegradable_servo()
         elif label in non_biodegradable_items:
             object_type = "Non-Biodegradable"
             color = (0, 0, 255)
-            move_nonbiodegradable_servo()
         else:
             object_type = "Unknown"
             color = (255, 0, 0)
@@ -64,4 +61,3 @@ except KeyboardInterrupt:
 finally:
     cap.release()
     cv2.destroyAllWindows()
-    cleanup()
